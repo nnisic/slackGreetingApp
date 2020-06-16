@@ -9,13 +9,11 @@ exports.handler = async (event) => {
   const payloadJson = JSON.parse(decodeURIComponent(Base64.decode(event.body).split("=")[1]));
   const interactionType = payloadJson.type;
   const triggerId = payloadJson.trigger_id;
+  const slackToken = process.env.slack_token;
 
   if(interactionType === "block_actions") {
 
     const channelId = payloadJson.channel.id;
-
-    console.log('PAYLOAD: ');
-    console.log(payloadJson);
 
     const viewPayload =
       {
@@ -59,7 +57,7 @@ exports.handler = async (event) => {
       body: JSON.stringify(viewPayload),
       headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer /* token here */"
+      "Authorization": slackToken
       }
     });
 
@@ -100,7 +98,7 @@ exports.handler = async (event) => {
       body: JSON.stringify(viewPayload),
       headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer /* token here */"
+      "Authorization": slackToken
       }
     });
 

@@ -10,12 +10,12 @@ exports.handler = async (event) => {
   const interactionType = payloadJson.type;
   const triggerId = payloadJson.trigger_id;
 
-  //Comment to fix branches
-
-
   if(interactionType === "block_actions") {
 
     const channelId = payloadJson.channel.id;
+
+    console.log('PAYLOAD: ');
+    console.log(payloadJson);
 
     const viewPayload =
       {
@@ -59,12 +59,10 @@ exports.handler = async (event) => {
       body: JSON.stringify(viewPayload),
       headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer /* OAuth token from Slack */"
+      "Authorization": "Bearer /* token here */"
       }
     });
 
-
-    // TODO implement
     const response = {
       headers: {
         "Content-Type": "application/json",
@@ -79,14 +77,19 @@ exports.handler = async (event) => {
 
   } else if(interactionType === "view_submission") {
 
+    const channelId = payloadJson.view.private_metadata;
+    const blockId = payloadJson.view.blocks[0].block_id;
+    const actionId = payloadJson.view.blocks[0].element.action_id;
+    const inputValue = payloadJson.view.state.values[blockId][actionId].value;
+
     const viewPayload = {
-      "channel": payloadJson.view.private_metadata,
+      "channel": channelId,
     	"blocks": [
     		{
     			"type": "section",
     			"text": {
     				"type": "plain_text",
-    				"text": "Hello Sir!"
+    				"text": "Hello " + inputValue + "!"
     			}
     		}
     	]
@@ -97,7 +100,7 @@ exports.handler = async (event) => {
       body: JSON.stringify(viewPayload),
       headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer /* OAuth token from Slack */"
+      "Authorization": "Bearer /* token here */"
       }
     });
 

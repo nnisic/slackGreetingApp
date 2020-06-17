@@ -26,7 +26,7 @@ exports.handler = async (event) => {
       const slackSignature = event.headers['x-slack-signature'];
 
       /*
-      * Verify that the request is coming from Slack. Throw error if request too old or request signature doesn't match computed signature. Throw Unauthorized Request error if not.
+      * Verify that the request is coming from Slack. Throw error if request older than 2 minutes or request signature doesn't match computed signature. Throw Unauthorized Request error if not.
       */
       if(!authorizeRequest(requestTimestamp, requestBody, slackSignature)) {
         throw new Error('401');
@@ -73,6 +73,13 @@ exports.handler = async (event) => {
       return response;
     } catch(error) {
 
+
+      /*
+      * Return error responses according to which types of errors occurred.
+      * - 400 for bad request, for example if the POST request payload doesn't look like the characteristic Slack interaction payload.
+      * - 401 for unauthorized request, for example if the request is older than 2 minutes (which is a very generous amount of time)
+      *   or if the payload's signature doesn't match the locally computed signature.
+      */
         if(error == 'Error: 401') {
           /*
           * Return response with HTTP status code 401 (Unauthorized request).
@@ -136,7 +143,7 @@ function authorizeRequest(timestamp, requestBody, slackSignature) {
   const mySignature = 'v0=' + hmac.digest('hex');
 
   /*
-  * Return boolean for request authorization in main function.
+  * Return boolean for request authorization in main function. If request is older than 2 minutes or signatures don't match, consider it fake.
   */
   return (mySignature.localeCompare(slackSignature) === 0 && currentTime - timestamp < 60*2);
 

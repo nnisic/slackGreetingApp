@@ -75,7 +75,7 @@ exports.handler = async (event) => {
 
         if(error == 'Error: 401') {
           /*
-          * Return response with HTTP status code 401 (Unauthorized request) to Slack.
+          * Return response with HTTP status code 401 (Unauthorized request).
           */
           const response = {
             statusCode: 401,
@@ -92,7 +92,7 @@ exports.handler = async (event) => {
           return response;
         } else if(error == 'Error: 400') {
             /*
-            * Return response with HTTP status code 401 (Unauthorized request) to Slack.
+            * Return response with HTTP status code 401 (Unauthorized request).
             */
             const response = {
               statusCode: 400,

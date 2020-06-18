@@ -8,9 +8,9 @@ exports.handler = async (event) => {
   /*
   * Error messages.
   */
-  const unauthorizedRequestMessage = "Unauthorized request. Either the request signature doesn't match the local computed signature, or the request is too old to fulfill.";
-  const badRequestMessage = "Bad request. Please make sure to include a request header & body, along with a timestamp and signature in the header.";
-  const internalServerErrorMessage = "There was an error with the server's ability to communicate with the Slack API. This is likely due to lack of authorization, or an improperly formatted payload on our behalf."
+  const unauthorizedRequestMessage = "Unauthorized Request. Either the request signature doesn't match the local computed signature, or the request is too old to fulfill.";
+  const badRequestMessage = "Bad Request. Please make sure to include a request header & body, along with a timestamp and signature in the header.";
+  const internalServerErrorMessage = "Internal Server ErrorThere was an error with the server's ability to communicate with the Slack API. This is likely due to lack of authorization, or an improperly formatted payload on our behalf."
 
   try {
 

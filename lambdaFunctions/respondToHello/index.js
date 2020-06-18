@@ -6,8 +6,8 @@ exports.handler = async (event) => {
   /*
   * Error messages.
   */
-  const unauthorizedRequestMessage = "Unauthorized request. Either the request signature doesn't match the local computed signature, or the request is too old to fulfill.";
-  const badRequestMessage = "Bad request. Please make sure to include a request header & body, along with a timestamp and signature in the header.";
+  const unauthorizedRequestMessage = "Unauthorized Request. Either the request signature doesn't match the local computed signature, or the request is too old to fulfill.";
+  const badRequestMessage = "Bad Request. Please make sure to include a request header & body, along with a timestamp and signature in the header.";
 
   try {
 
@@ -71,7 +71,6 @@ exports.handler = async (event) => {
     };
 
   } catch(error) {
-
 
     /*
     * Return error responses according to which types of errors occurred.

@@ -73,7 +73,7 @@ exports.handler = async (event) => {
   } catch(error) {
 
     /*
-    * Return error responses according to which types of errors occurred.
+    * Return error responses according to which error occurred.
     * - 400 for Bad Request, for example if the POST request payload doesn't look like the characteristic Slack interaction payload.
     * - 401 for Unauthorized Request, for example if the request is older than 2 minutes (which is a very generous amount of time)
     *   or if the payload's signature doesn't match the locally computed signature.

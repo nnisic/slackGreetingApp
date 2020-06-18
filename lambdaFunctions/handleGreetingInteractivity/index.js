@@ -34,34 +34,36 @@ exports.handler = async (event) => {
     const slackSignature = event.headers['x-slack-signature'];
 
     /*
-    * Verify that the request is coming from Slack. Throw error if request older than 2 minutes or request signature doesn't match computed signature. Throw Unauthorized Request error if not.
+    * Verify that the request is coming from Slack. Throw Unauthorized Request error if request older than 2 minutes or request signature doesn't match computed signature.
     */
     if(!(authorizeRequest(requestTimestamp, requestBody, slackSignature))) {
       throw new Error('401');
     }
 
     /*
-    * If there's no slack_token environment variable configured, consider it an internal server error and throw an error.
+    * If there's no slack_token environment variable configured, throw an Internal Server error.
     */
     if(!process.env.slack_token) {
       throw new Error('500');
     }
     /*
-    * Get Slack OAuth token from environment variable (configured in AWS Lambda console) so that bot can call Slack API methods.
+    * Get Slack OAuth token from environment variable (configured in AWS Lambda console) so that bot can be authorized to call Slack API methods.
     */
     const slackToken = process.env.slack_token;
 
     /*
     * Get the interaction type from the payload to know where to go next with it.
+    * - block_actions means that the user clicked on the Greeting Button from the bot's first message.
+    * - view_submission means that the user submitted the modal asking for their name.
     */
     const interactionType = payloadJson.type;
 
     if(interactionType === "block_actions") {
 
       /*
-      * Get channel ID from block_actions payload to put in private_metadata field of the view_submission payload (which is sent after user submits modal).
-      * I do this because Slack's default view_submission payload doesn't pass any information about the current channel, but it is needed
-      * to post a message back into the same channel.
+      * Get channel ID from block_actions payload to put in private_metadata field of the modal view object.
+      * I do this because Slack's default view_submission payload (which is sent after user submits modal) doesn't pass any information about the current channel, but it is needed
+      * to post a message back into the same channel. This way, the view_submission payload will inlude the channel ID, allowing the app to respond in the same channel.
       */
       const channelId = payloadJson.channel.id;
 
@@ -71,7 +73,7 @@ exports.handler = async (event) => {
       const triggerId = payloadJson.trigger_id;
 
       /*
-      * Build view payload with trigger ID,
+      * Build modal view payload with trigger ID and channel ID to send in body of views.open POST request.
       */
       const viewPayload =
         {
@@ -134,7 +136,7 @@ exports.handler = async (event) => {
       /*
       * Return response with HTTP status code 200 back to Slack.
       */
-      const response = {
+      return {
         statusCode: 200,
         headers: {
           "Content-Type": "application/json",
@@ -143,13 +145,10 @@ exports.handler = async (event) => {
         "isBase64Encoded": false,
       };
 
-      return response;
-
     } else if(interactionType === "view_submission") {
 
       /*
       * Get channel ID from the value of the private_metadata field that I put in the view_submission payload (submitting the name modal).
-      * I put this in private_metadata because, as far as I can tell, the view_submission payload provides no channel information.
       */
       const channelId = payloadJson.view.private_metadata;
 
@@ -159,7 +158,7 @@ exports.handler = async (event) => {
       */
       const blockId = payloadJson.view.blocks[0].block_id;
       const actionId = payloadJson.view.blocks[0].element.action_id;
-      const inputValue = payloadJson.view.state.values[blockId][actionId].value;
+      const inputValue = payloadJson.view.state.values[blockId][actionId].value.split('+').join(' ');
       const greetingText = "Hello " + inputValue + "!";
 
       /*
@@ -203,7 +202,7 @@ exports.handler = async (event) => {
       /*
       * Return response with HTTP status code 200 back to Slack.
       */
-      const response = {
+      return {
           statusCode: 200,
           headers: {
             "Content-Type": "application/json",
@@ -211,13 +210,11 @@ exports.handler = async (event) => {
           },
           "isBase64Encoded": false,
       };
-
-      return response;
     }
   } catch(error) {
 
     /*
-    * Return error responses according to which types of errors occurred.
+    * Return error responses according to which error occurred.
     * - 400 for bad request, for example if the POST request payload doesn't look like the characteristic Slack interaction payload.
     * - 401 for unauthorized request, for example if the request is older than 2 minutes (which is a very generous amount of time)
     *   or if the payload's signature doesn't match the locally computed signature.
@@ -226,7 +223,7 @@ exports.handler = async (event) => {
     */
     if(error == 'Error: 400') {
 
-      const response = {
+      return {
         statusCode: 400,
         headers: {
           "Content-Type": "application/json",
@@ -236,15 +233,11 @@ exports.handler = async (event) => {
         body: JSON.stringify({
           message: badRequestMessage
         })
-      }
-
-      console.log('RESPONSE: ');
-      console.log(response);
-      return response;
+      };
 
     } else if(error == 'Error: 401') {
 
-      const response = {
+      return {
         statusCode: 401,
         headers: {
           "Content-Type": "application/json",
@@ -254,15 +247,11 @@ exports.handler = async (event) => {
         body: JSON.stringify({
           message: unauthorizedRequestMessage
         })
-      }
-
-      console.log('RESPONSE: ');
-      console.log(response);
-      return response;
+      };
 
     } else if(error == 'Error: 500') {
 
-      const response = {
+      return {
         statusCode: 500,
         headers: {
           "Content-Type": "application/json",
@@ -272,23 +261,15 @@ exports.handler = async (event) => {
         body: JSON.stringify({
           message: internalServerErrorMessage
         })
-      }
-
-      console.log('RESPONSE: ');
-      console.log(response);
-      return response;
-
+      };
     }
-
-
   }
-
 };
 
 function authorizeRequest(timestamp, requestBody, slackSignature) {
 
   /*
-  * Gather and format info for request authorization.
+  * Gather and format info for Slack request authorization.
   */
   const signingSecret = process.env.signing_secret;
   const decodedBody = Base64.decode(requestBody);
@@ -310,5 +291,4 @@ function authorizeRequest(timestamp, requestBody, slackSignature) {
   * Return boolean for request authorization in main function. If request is older than 2 minutes or if signatures don't match, consider it fake.
   */
   return (mySignature.localeCompare(slackSignature) === 0 && currentTime - timestamp < 60*2);
-
 }

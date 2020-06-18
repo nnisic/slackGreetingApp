@@ -15,7 +15,7 @@ exports.handler = async (event) => {
   try {
 
     /*
-    * Verify that the request includes headers, body, and necessary authorization info in he headers. Throw Bad Request error if not.
+    * Verify that the request includes headers, body, and necessary authorization info in the headers. Throw Bad Request error if not.
     */
     if(!(event.headers && event.body && event.headers['x-slack-request-timestamp'] && event.headers['x-slack-signature'])) {
       throw new Error('400');
